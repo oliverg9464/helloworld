@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Favourite Games</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f9f9f9;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 56px 24px 32px;
+      text-align: center;
+    }
+    header h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p { margin-top: 8px; color: #666; font-size: 1rem; }
+
+    .add-btn {
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .add-btn:hover { background: #333; }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px 24px 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.1);
+    }
+
+    .card-banner {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-banner .avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    /* Color themes */
+    .color-purple .card-banner { background: #f0edf5; }
+    .color-purple .avatar      { background: #7c3aed; }
+    .color-purple .game-tag    { background: #f0edf5; color: #7c3aed; }
+
+    .color-blue .card-banner { background: #edf1f5; }
+    .color-blue .avatar      { background: #2563eb; }
+    .color-blue .game-tag    { background: #edf1f5; color: #2563eb; }
+
+    .color-red .card-banner { background: #f5edec; }
+    .color-red .avatar      { background: #dc2626; }
+    .color-red .game-tag    { background: #f5edec; color: #dc2626; }
+
+    .color-green .card-banner { background: #edf5ee; }
+    .color-green .avatar      { background: #16a34a; }
+    .color-green .game-tag    { background: #edf5ee; color: #16a34a; }
+
+    .color-orange .card-banner { background: #f5f0ed; }
+    .color-orange .avatar      { background: #ea580c; }
+    .color-orange .game-tag    { background: #f5f0ed; color: #ea580c; }
+
+    .color-teal .card-banner { background: #edf4f5; }
+    .color-teal .avatar      { background: #0d9488; }
+    .color-teal .game-tag    { background: #edf4f5; color: #0d9488; }
+
+    .card-body { padding: 20px 22px 24px; }
+
+    .game-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 99px;
+      margin-bottom: 10px;
+    }
+
+    .card-body h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .card-body p  { font-size: 0.88rem; line-height: 1.6; color: #555; }
+
+    .stats { margin-top: 16px; display: flex; gap: 16px; }
+    .stat { flex: 1; }
+    .stat-label {
+      font-size: 0.68rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 2px;
+    }
+    .stat-value { font-size: 0.88rem; font-weight: 600; }
+
+    .delete-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,0.85);
+      border: none; border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #999;
+      opacity: 0; transition: opacity 0.15s, color 0.15s;
+    }
+    .card:hover .delete-btn { opacity: 1; }
+    .delete-btn:hover { color: #dc2626; }
+
+    /* Empty state */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 0;
+      color: #aaa;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%; max-width: 480px;
+      margin: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .modal-box h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; }
+
+    .form-row { margin-bottom: 14px; }
+    .form-row label { display: block; font-size: 0.78rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .form-row input, .form-row textarea, .form-row select {
+      width: 100%; padding: 9px 12px;
+      border: 1.5px solid #e5e5e5; border-radius: 8px;
+      font-size: 0.9rem; font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .form-row input:focus, .form-row textarea:focus, .form-row select:focus {
+      border-color: #1a1a1a;
+    }
+    .form-row textarea { resize: vertical; min-height: 80px; }
+
+    .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+    .swatch {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+    }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.selected { border-color: #1a1a1a; }
+    .swatch[data-color="purple"] { background: #7c3aed; }
+    .swatch[data-color="blue"]   { background: #2563eb; }
+    .swatch[data-color="red"]    { background: #dc2626; }
+    .swatch[data-color="green"]  { background: #16a34a; }
+    .swatch[data-color="orange"] { background: #ea580c; }
+    .swatch[data-color="teal"]   { background: #0d9488; }
+
+    .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+    .btn-cancel {
+      padding: 9px 18px; background: #f3f3f3; border: none;
+      border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; color: #555;
+    }
+    .btn-cancel:hover { background: #e8e8e8; }
+    .btn-save {
+      padding: 9px 18px; background: #1a1a1a; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-save:hover { background: #333; }
+    .btn-save:disabled { background: #aaa; cursor: not-allowed; }
+
+    .error-msg { color: #dc2626; font-size: 0.82rem; margin-top: 10px; }
+
+    footer {
+      text-align: center; padding-bottom: 32px;
+      color: #aaa; font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>My Favourite Games</h1>
+    <p>The games I keep coming back to.</p>
+    <button class="add-btn" id="open-modal">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add Game
+    </button>
+  </header>
+
+  <main id="grid"></main>
+
+  <!-- Add Game Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal-box">
+      <h2>Add a Game</h2>
+      <form id="add-form" novalidate>
+
+        <div class="form-row">
+          <label for="f-name">Game name *</label>
+          <input id="f-name" type="text" placeholder="e.g. Minecraft" required />
+        </div>
+
+        <div class="form-row">
+          <label for="f-tag">Genre *</label>
+          <input id="f-tag" type="text" placeholder="e.g. Survival, RPG, FPS" required />
+        </div>
+
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label for="f-dev">Developer *</label>
+            <input id="f-dev" type="text" placeholder="e.g. Mojang" required />
+          </div>
+          <div>
+            <label for="f-platform">Platform *</label>
+            <input id="f-platform" type="text" placeholder="e.g. PC / Console" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="f-mode">Game mode *</label>
+          <input id="f-mode" type="text" placeholder="e.g. Solo, Co-op, Multiplayer" required />
+        </div>
+
+        <div class="form-row">
+          <label for="f-desc">Description *</label>
+          <textarea id="f-desc" placeholder="What makes this game great?" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <label>Accent colour</label>
+          <div class="color-swatches">
+            <div class="swatch selected" data-color="blue"></div>
+            <div class="swatch" data-color="purple"></div>
+            <div class="swatch" data-color="red"></div>
+            <div class="swatch" data-color="green"></div>
+            <div class="swatch" data-color="orange"></div>
+            <div class="swatch" data-color="teal"></div>
+          </div>
+        </div>
+
+        <div class="error-msg" id="form-error"></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="close-modal">Cancel</button>
+          <button type="submit" class="btn-save" id="save-btn">Add Game</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>Made by Oliver &mdash; 2026</p>
+  </footer>
+
+  <script>
+    let selectedColor = 'blue';
+
+    // Color swatches
+    document.querySelectorAll('.swatch').forEach(s => {
+      s.addEventListener('click', () => {
+        document.querySelectorAll('.swatch').forEach(x => x.classList.remove('selected'));
+        s.classList.add('selected');
+        selectedColor = s.dataset.color;
+      });
+    });
+
+    // Modal open/close
+    const modal = document.getElementById('modal');
+    document.getElementById('open-modal').addEventListener('click', () => {
+      modal.classList.add('open');
+      document.getElementById('f-name').focus();
+    });
+    const closeModal = () => {
+      modal.classList.remove('open');
+      document.getElementById('add-form').reset();
+      document.getElementById('form-error').textContent = '';
+      selectedColor = 'blue';
+      document.querySelectorAll('.swatch').forEach(x => x.classList.remove('selected'));
+      document.querySelector('.swatch[data-color="blue"]').classList.add('selected');
+    };
+    document.getElementById('close-modal').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    // Render a single card
+    function createCard(game) {
+      const letter = game.name.charAt(0).toUpperCase();
+      const card = document.createElement('article');
+      card.className = `card color-${game.color}`;
+      card.dataset.id = game.id;
+      card.innerHTML = `
+        <button class="delete-btn" title="Remove game" aria-label="Remove ${game.name}">&#x2715;</button>
+        <div class="card-banner">
+          <div class="avatar">${letter}</div>
+        </div>
+        <div class="card-body">
+          <span class="game-tag">${game.tag}</span>
+          <h2>${game.name}</h2>
+          <p>${game.description}</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">Developer</div>
+              <div class="stat-value">${game.developer}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Platform</div>
+              <div class="stat-value">${game.platform}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Mode</div>
+              <div class="stat-value">${game.mode}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      card.querySelector('.delete-btn').addEventListener('click', () => deleteGame(game.id, card));
+      return card;
+    }
+
+    function setEmpty(grid) {
+      grid.innerHTML = '<div class="empty">No games yet — add one above!</div>';
+    }
+
+    // Load all games
+    async function loadGames() {
+      const grid = document.getElementById('grid');
+      const res = await fetch('/api/games');
+      const games = await res.json();
+      grid.innerHTML = '';
+      if (games.length === 0) { setEmpty(grid); return; }
+      games.forEach(g => grid.appendChild(createCard(g)));
+    }
+
+    // Delete a game
+    async function deleteGame(id, card) {
+      await fetch(`/api/games/${id}`, { method: 'DELETE' });
+      card.remove();
+      const grid = document.getElementById('grid');
+      if (!grid.querySelector('.card')) setEmpty(grid);
+    }
+
+    // Add a game
+    document.getElementById('add-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const errorEl = document.getElementById('form-error');
+      const saveBtn = document.getElementById('save-btn');
+
+      const body = {
+        name:        document.getElementById('f-name').value.trim(),
+        tag:         document.getElementById('f-tag').value.trim(),
+        developer:   document.getElementById('f-dev').value.trim(),
+        platform:    document.getElementById('f-platform').value.trim(),
+        mode:        document.getElementById('f-mode').value.trim(),
+        description: document.getElementById('f-desc').value.trim(),
+        color:       selectedColor,
+      };
+
+      if (Object.values(body).some(v => !v)) {
+        errorEl.textContent = 'Please fill in all fields.';
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('/api/games', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          errorEl.textContent = err.error || 'Something went wrong.';
+          return;
+        }
+        const game = await res.json();
+        const grid = document.getElementById('grid');
+        const empty = grid.querySelector('.empty');
+        if (empty) empty.remove();
+        grid.appendChild(createCard(game));
+        closeModal();
+      } catch {
+        errorEl.textContent = 'Could not connect to server.';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Add Game';
+      }
+    });
+
+    loadGames();
+  </script>
+
+</body>
+</html>
